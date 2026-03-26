@@ -1,4 +1,4 @@
-import type { ShooterGame } from '../game/ShooterGame'
+import type { ShooterGame } from '../game/ShooterGame.ts'
 
 export function installStep1PlayerMove(game: ShooterGame): void {
   game.setMessage('STEP 1: Move player with WASD / Arrow keys')

@@ -1,5 +1,5 @@
 import { createGameLayout } from '../app/createGameLayout'
-import { Bullet, Enemy, Player, Star, isColliding } from './entities'
+import { Bullet, Enemy, Player, Star } from './entities'
 
 type PlayerRenderMode = 'svg-polygon' | 'clip-path'
 const PLAYER_RENDER_MODE: PlayerRenderMode = 'svg-polygon'
@@ -103,117 +103,6 @@ export class ShooterGame {
     this.score += points
   }
 
-  damagePlayer(amount = 1): void {
-    this.player.hp -= amount
-    if (this.player.hp <= 0) {
-      this.player.hp = 0
-      this.gameOver = true
-      this.hudMessage.textContent = 'GAME OVER - Press Enter to Restart'
-    }
-  }
-
-  spawnPlayerBullet(speed = 620): void {
-    this.bullets.push(
-      new Bullet(
-        { x: this.player.pos.x, y: this.player.pos.y - 18 },
-        { x: 0, y: -speed },
-        4,
-        '#ffe082',
-        true,
-      ),
-    )
-  }
-
-  spawnEnemyBullet(enemy: Enemy, speed = 280): void {
-    this.bullets.push(
-      new Bullet({ x: enemy.pos.x, y: enemy.pos.y + 12 }, { x: 0, y: speed }, 5, '#ff6f91', false),
-    )
-  }
-
-  spawnEnemy(posX: number, speedY: number, hp: number): void {
-    const radius = hp === 3 ? 18 : 13
-    this.enemies.push(new Enemy({ x: posX, y: -24 }, { x: 0, y: speedY }, radius, hp))
-  }
-
-  updateBullets(dt: number): void {
-    for (const bullet of this.bullets) {
-      bullet.update(dt)
-      if (bullet.pos.y < -30 || bullet.pos.y > this.height + 30) {
-        bullet.alive = false
-      }
-    }
-  }
-
-  updateEnemies(dt: number): void {
-    for (const enemy of this.enemies) {
-      enemy.update(dt)
-      enemy.fireCooldown -= dt
-
-      if (enemy.pos.y > this.height + 36) {
-        enemy.alive = false
-      }
-    }
-  }
-
-  cleanupObjects(): void {
-    this.bullets = this.bullets.filter((b) => b.alive)
-    this.enemies = this.enemies.filter((e) => e.alive)
-  }
-
-  isColliding = isColliding
-
-  renderBullets(): void {
-    for (const bullet of this.bullets) {
-      this.ctx.beginPath()
-      this.ctx.fillStyle = bullet.color
-      this.ctx.arc(bullet.pos.x, bullet.pos.y, bullet.radius, 0, Math.PI * 2)
-      this.ctx.fill()
-    }
-  }
-
-  renderEnemies(): void {
-    for (const enemy of this.enemies) {
-      this.ctx.beginPath()
-      this.ctx.fillStyle = enemy.hp > 1 ? '#f25f5c' : '#ff9f1c'
-      this.ctx.arc(enemy.pos.x, enemy.pos.y, enemy.radius, 0, Math.PI * 2)
-      this.ctx.fill()
-
-      this.ctx.fillStyle = '#0a0f1d'
-      this.ctx.fillRect(enemy.pos.x - 8, enemy.pos.y - 3, 16, 6)
-    }
-  }
-
-  createStars(count: number): void {
-    this.stars = []
-    for (let i = 0; i < count; i += 1) {
-      this.stars.push(
-        new Star(
-          Math.random() * this.width,
-          Math.random() * this.height,
-          Math.random() * 2 + 0.4,
-          Math.random() * 70 + 30,
-        ),
-      )
-    }
-  }
-
-  updateStars(dt: number): void {
-    for (const star of this.stars) {
-      star.y += star.speed * dt
-      if (star.y > this.height + 2) {
-        star.y = -4
-        star.x = Math.random() * this.width
-      }
-    }
-  }
-
-  renderStars(): void {
-    for (const star of this.stars) {
-      this.ctx.fillStyle = 'rgba(233, 245, 255, 0.85)'
-      this.ctx.fillRect(star.x, star.y, star.size, star.size)
-    }
-  }
-
   private bindInput(): void {
     window.addEventListener('keydown', (event) => {
       if (event.code === 'Space') {
@@ -275,7 +164,9 @@ export class ShooterGame {
       handler(this, dt)
     }
 
-    this.cleanupObjects()
+    this.bullets = this.bullets.filter((bullet) => bullet.alive)
+    this.enemies = this.enemies.filter((enemy) => enemy.alive)
+
     this.updateHud()
   }
 

@@ -1,8 +1,9 @@
-import type { ShooterGame } from '../game/ShooterGame'
+import type { ShooterGame } from '../game/ShooterGame.ts'
 import { installStep1PlayerMove } from './step1PlayerMove'
 import { installStep2PlayerShot } from './step2PlayerShot'
 import { installStep3EnemySpawnAndCollision } from './step3EnemySpawnAndCollision'
 import { installStep4EnemyShot } from './step4EnemyShot'
+import { installStep5SpaceBackground } from './step5SpaceBackground'
 
 export function setupWorkshopCourse(game: ShooterGame): void {
   installStep1PlayerMove(game)
@@ -26,4 +27,5 @@ export function setupWorkshopCourse(game: ShooterGame): void {
   // STEP 5:
   // 1) `src/workshop/step5SpaceBackground.ts` を作る
   // 2) ここで import して呼ぶ
+  installStep5SpaceBackground(game)
 }
