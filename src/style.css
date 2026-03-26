@@ -70,6 +70,53 @@ body {
   display: block;
 }
 
+.game-stage {
+  position: relative;
+}
+
+.player-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.player-shape {
+  position: absolute;
+  width: 32px;
+  height: 36px;
+  transform-origin: center center;
+  display: none;
+}
+
+.player-shape.is-active {
+  display: block;
+}
+
+.player-shape--svg {
+  overflow: visible;
+}
+
+.player-hull {
+  fill: #72ddf7;
+}
+
+.player-core {
+  fill: #f5f7fa;
+}
+
+.player-shape--clip {
+  background: #72ddf7;
+  clip-path: polygon(50% 0%, 90.6% 94.4%, 50% 77.8%, 9.4% 94.4%);
+}
+
+.player-shape--clip::after {
+  content: '';
+  position: absolute;
+  inset: 8px 10px 8px;
+  background: #f5f7fa;
+  clip-path: polygon(50% 0%, 85% 100%, 15% 100%);
+}
+
 #message {
   margin: 12px 4px 4px;
   text-align: center;

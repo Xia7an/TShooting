@@ -1,6 +1,8 @@
 import './style.css'
 
 type Vec2 = { x: number; y: number }
+type PlayerRenderMode = 'svg-polygon' | 'clip-path'
+const PLAYER_RENDER_MODE: PlayerRenderMode = 'svg-polygon'
 
 class GameObject {
   pos: Vec2
@@ -81,6 +83,9 @@ class ShooterGame {
   private hudScore: HTMLElement
   private hudHp: HTMLElement
   private hudMessage: HTMLElement
+  private playerSvg: SVGSVGElement
+  private playerClip: HTMLDivElement
+  private playerRenderMode: PlayerRenderMode = PLAYER_RENDER_MODE
 
   constructor() {
     document.querySelector<HTMLDivElement>('#app')!.innerHTML = `
@@ -92,7 +97,16 @@ class ShooterGame {
             <span id="hp">HP: 3</span>
           </div>
         </header>
-        <canvas id="game" width="420" height="720" aria-label="2D vertical shooting game"></canvas>
+        <div class="game-stage">
+          <canvas id="game" width="420" height="720" aria-label="2D vertical shooting game"></canvas>
+          <div class="player-layer" aria-hidden="true">
+            <svg id="player-svg" class="player-shape player-shape--svg" viewBox="-16 -20 32 36">
+              <polygon class="player-hull" points="0,-18 13,16 0,10 -13,16" />
+              <polygon class="player-core" points="0,-10 6,9 -6,9" />
+            </svg>
+            <div id="player-clip" class="player-shape player-shape--clip"></div>
+          </div>
+        </div>
         <p id="message">WASD / Arrow Keys: Move | Space: Shoot</p>
       </main>
     `
@@ -107,8 +121,12 @@ class ShooterGame {
     this.hudScore = document.querySelector<HTMLElement>('#score')!
     this.hudHp = document.querySelector<HTMLElement>('#hp')!
     this.hudMessage = document.querySelector<HTMLElement>('#message')!
+    this.playerSvg = document.querySelector<SVGSVGElement>('#player-svg')!
+    this.playerClip = document.querySelector<HTMLDivElement>('#player-clip')!
 
     this.player = new Player({ x: this.width / 2, y: this.height - 80 }, { x: 0, y: 0 }, 14)
+    this.setPlayerRenderMode(this.playerRenderMode)
+    this.syncPlayerVisual()
 
     this.createStars()
     this.bindInput()
@@ -157,6 +175,7 @@ class ShooterGame {
     this.difficultyTimer = 0
     this.spawnInterval = 1.1
     this.hudMessage.textContent = 'WASD / Arrow Keys: Move | Space: Shoot'
+    this.syncPlayerVisual()
   }
 
   private loop(timestamp: number): void {
@@ -171,6 +190,7 @@ class ShooterGame {
 
   private update(dt: number): void {
     this.updateStars(dt)
+    this.syncPlayerVisual()
 
     if (this.gameOver) {
       return
@@ -329,6 +349,30 @@ class ShooterGame {
     this.hudHp.textContent = `HP: ${this.player.hp}`
   }
 
+  private setPlayerRenderMode(mode: PlayerRenderMode): void {
+    this.playerRenderMode = mode
+    const showSvg = mode === 'svg-polygon'
+    this.playerSvg.classList.toggle('is-active', showSvg)
+    this.playerClip.classList.toggle('is-active', !showSvg)
+  }
+
+  private syncPlayerVisual(): void {
+    const scaleX = this.canvas.clientWidth / this.width
+    const scaleY = this.canvas.clientHeight / this.height
+    const x = this.player.pos.x * scaleX
+    const y = this.player.pos.y * scaleY
+    const scale = Math.min(scaleX, scaleY)
+    const transform = `translate(-50%, -50%) scale(${scale})`
+
+    this.playerSvg.style.left = `${x}px`
+    this.playerSvg.style.top = `${y}px`
+    this.playerSvg.style.transform = transform
+
+    this.playerClip.style.left = `${x}px`
+    this.playerClip.style.top = `${y}px`
+    this.playerClip.style.transform = transform
+  }
+
   private isColliding(a: GameObject, b: GameObject): boolean {
     const dx = a.pos.x - b.pos.x
     const dy = a.pos.y - b.pos.y
@@ -367,8 +411,6 @@ class ShooterGame {
       ctx.fillRect(enemy.pos.x - 8, enemy.pos.y - 3, 16, 6)
     }
 
-    this.drawPlayer()
-
     if (this.gameOver) {
       ctx.fillStyle = 'rgba(4, 8, 18, 0.52)'
       ctx.fillRect(0, 0, this.width, this.height)
@@ -383,32 +425,6 @@ class ShooterGame {
     }
   }
 
-  private drawPlayer(): void {
-    const ctx = this.ctx
-    const p = this.player
-
-    ctx.save()
-    ctx.translate(p.pos.x, p.pos.y)
-
-    ctx.beginPath()
-    ctx.moveTo(0, -18)
-    ctx.lineTo(13, 16)
-    ctx.lineTo(0, 10)
-    ctx.lineTo(-13, 16)
-    ctx.closePath()
-    ctx.fillStyle = '#72ddf7'
-    ctx.fill()
-
-    ctx.beginPath()
-    ctx.moveTo(0, -10)
-    ctx.lineTo(6, 9)
-    ctx.lineTo(-6, 9)
-    ctx.closePath()
-    ctx.fillStyle = '#f5f7fa'
-    ctx.fill()
-
-    ctx.restore()
-  }
 }
 
 new ShooterGame()
