@@ -1,6 +1,7 @@
 import './style.css'
 import { ShooterGame } from './game/ShooterGame'
-import { LESSON_STEP } from './workshop/lessonConfig'
+import { setupWorkshopCourse } from './workshop/gameCourse'
 
-const game = new ShooterGame({ step: LESSON_STEP })
+const game = new ShooterGame()
+setupWorkshopCourse(game)
 game.start()

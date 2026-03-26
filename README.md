@@ -1,7 +1,7 @@
 # TShooting（Sky Lance）
 
 ブラウザで遊べる縦スクロール2Dシューティングゲームです。  
-講習会向けに、ゲーム機能を段階的に増やせる構成へリファクタリングしています。
+講習会向けに、参加者がファイルを順番に作って機能を追加していく構成にしています。
 
 ## 起動方法
 
@@ -10,24 +10,41 @@ npm install
 npm run dev
 ```
 
-## 講習会で触るファイル
+## 講習会での進め方
 
-- `src/workshop/lessonConfig.ts`
+### STEP 1
 
-`LESSON_STEP` を変更することで、実装段階を切り替えられます。
+- 触るファイル: `src/workshop/step1PlayerMove.ts`
+- 状態: 白背景に自機が表示され、移動できる
 
-- `1`: 白背景 + 自機移動
-- `2`: 自機弾の発射
-- `3`: 敵出現 + 弾/敵の当たり判定
-- `4`: 敵弾の発射
-- `5`: 宇宙風背景（完成版）
+### STEP 2
 
-## ファイル構成の意図
+- 新規作成: `src/workshop/step2PlayerShot.ts`
+- 変更: `src/workshop/gameCourse.ts` に import と `installStep2PlayerShot(game)` を追加
+- 目標: 自機が弾を発射できる
 
-- `src/main.ts` : 起動だけを行う最小のエントリポイント
-- `src/workshop/lessonConfig.ts` : 講習会で操作する段階設定
-- `src/game/ShooterGame.ts` : ゲーム進行の本体
-- `src/game/entities.ts` : 位置や速度などゲームオブジェクトの基礎
-- `src/app/createGameLayout.ts` : Web固有のDOM構築（`innerHTML` 不使用）
+### STEP 3
 
-Web APIの細かい扱いは `src/app` 側に寄せ、講習会ではTypeScriptのゲームロジックに集中しやすくしています。
+- 新規作成: `src/workshop/step3EnemySpawnAndCollision.ts`
+- 変更: `src/workshop/gameCourse.ts` に import と呼び出しを追加
+- 目標: 敵がランダム出現し、敵弾なしで当たり判定を実装
+
+### STEP 4
+
+- 新規作成: `src/workshop/step4EnemyShot.ts`
+- 変更: `src/workshop/gameCourse.ts` に import と呼び出しを追加
+- 目標: 敵が弾を撃つ
+
+### STEP 5
+
+- 新規作成: `src/workshop/step5SpaceBackground.ts`
+- 変更: `src/workshop/gameCourse.ts` に import と呼び出しを追加
+- 目標: 背景を宇宙風にする
+
+## 構成方針
+
+- `src/workshop/gameCourse.ts` が「講習会の進行管理ファイル」です
+- `src/game/ShooterGame.ts` は拡張ポイントを提供する土台です
+- `src/app/createGameLayout.ts` はWeb固有処理を隠蔽し、`innerHTML` は使いません
+
+参加者は `src/workshop` のファイル中心に実装し、ゲーム全体の主導権を持ったまま段階的に完成させられます。

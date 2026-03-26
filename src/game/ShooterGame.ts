@@ -1,29 +1,29 @@
 import { createGameLayout } from '../app/createGameLayout'
 import { Bullet, Enemy, Player, Star, isColliding } from './entities'
-import { getLessonFeatures, getLessonMessage, type LessonStep } from '../workshop/lessonConfig'
 
 type PlayerRenderMode = 'svg-polygon' | 'clip-path'
 const PLAYER_RENDER_MODE: PlayerRenderMode = 'svg-polygon'
 
-type ShooterGameOptions = {
-  step: LessonStep
-}
+type UpdateHandler = (game: ShooterGame, dt: number) => void
+type RenderHandler = (game: ShooterGame, ctx: CanvasRenderingContext2D) => void
+type RestartHandler = (game: ShooterGame) => void
+type BackgroundRenderer = (game: ShooterGame, ctx: CanvasRenderingContext2D) => void
 
 export class ShooterGame {
-  private canvas: HTMLCanvasElement
-  private ctx: CanvasRenderingContext2D
-  private width = 420
-  private height = 720
-  private player: Player
-  private bullets: Bullet[] = []
-  private enemies: Enemy[] = []
-  private stars: Star[] = []
-  private keys = new Set<string>()
-  private score = 0
-  private gameOver = false
-  private enemySpawnTimer = 0
-  private difficultyTimer = 0
-  private spawnInterval = 1.1
+  readonly canvas: HTMLCanvasElement
+  readonly ctx: CanvasRenderingContext2D
+  readonly width = 420
+  readonly height = 720
+
+  readonly player: Player
+  bullets: Bullet[] = []
+  enemies: Enemy[] = []
+  stars: Star[] = []
+  readonly keys = new Set<string>()
+
+  score = 0
+  gameOver = false
+
   private lastTime = 0
   private hudScore: HTMLElement
   private hudHp: HTMLElement
@@ -31,11 +31,17 @@ export class ShooterGame {
   private playerSvg: SVGSVGElement
   private playerClip: HTMLDivElement
   private playerRenderMode: PlayerRenderMode = PLAYER_RENDER_MODE
-  private readonly step: LessonStep
 
-  constructor(options: ShooterGameOptions) {
-    this.step = options.step
+  private updateHandlers: UpdateHandler[] = []
+  private renderHandlers: RenderHandler[] = []
+  private restartHandlers: RestartHandler[] = []
 
+  private backgroundRenderer: BackgroundRenderer = (_game, ctx) => {
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, this.width, this.height)
+  }
+
+  constructor() {
     const layout = createGameLayout()
     this.canvas = layout.canvas
 
@@ -52,21 +58,134 @@ export class ShooterGame {
     this.playerClip = layout.playerClip
 
     this.player = new Player({ x: this.width / 2, y: this.height - 80 }, { x: 0, y: 0 }, 14)
+
     this.setPlayerRenderMode(this.playerRenderMode)
     this.syncPlayerVisual()
 
-    this.createStars()
     this.bindInput()
-    this.hudMessage.textContent = getLessonMessage(this.step)
+    this.updateHud()
   }
 
   start(): void {
     requestAnimationFrame((t) => this.loop(t))
   }
 
-  private createStars(): void {
+  addUpdateHandler(handler: UpdateHandler): void {
+    this.updateHandlers.push(handler)
+  }
+
+  addRenderHandler(handler: RenderHandler): void {
+    this.renderHandlers.push(handler)
+  }
+
+  addRestartHandler(handler: RestartHandler): void {
+    this.restartHandlers.push(handler)
+  }
+
+  setMessage(text: string): void {
+    this.hudMessage.textContent = text
+  }
+
+  setBackgroundRenderer(renderer: BackgroundRenderer): void {
+    this.backgroundRenderer = renderer
+  }
+
+  isKeyPressed(code: string): boolean {
+    return this.keys.has(code)
+  }
+
+  clampPlayerInStage(): void {
+    this.player.pos.x = Math.max(20, Math.min(this.width - 20, this.player.pos.x))
+    this.player.pos.y = Math.max(20, Math.min(this.height - 20, this.player.pos.y))
+  }
+
+  addScore(points: number): void {
+    this.score += points
+  }
+
+  damagePlayer(amount = 1): void {
+    this.player.hp -= amount
+    if (this.player.hp <= 0) {
+      this.player.hp = 0
+      this.gameOver = true
+      this.hudMessage.textContent = 'GAME OVER - Press Enter to Restart'
+    }
+  }
+
+  spawnPlayerBullet(speed = 620): void {
+    this.bullets.push(
+      new Bullet(
+        { x: this.player.pos.x, y: this.player.pos.y - 18 },
+        { x: 0, y: -speed },
+        4,
+        '#ffe082',
+        true,
+      ),
+    )
+  }
+
+  spawnEnemyBullet(enemy: Enemy, speed = 280): void {
+    this.bullets.push(
+      new Bullet({ x: enemy.pos.x, y: enemy.pos.y + 12 }, { x: 0, y: speed }, 5, '#ff6f91', false),
+    )
+  }
+
+  spawnEnemy(posX: number, speedY: number, hp: number): void {
+    const radius = hp === 3 ? 18 : 13
+    this.enemies.push(new Enemy({ x: posX, y: -24 }, { x: 0, y: speedY }, radius, hp))
+  }
+
+  updateBullets(dt: number): void {
+    for (const bullet of this.bullets) {
+      bullet.update(dt)
+      if (bullet.pos.y < -30 || bullet.pos.y > this.height + 30) {
+        bullet.alive = false
+      }
+    }
+  }
+
+  updateEnemies(dt: number): void {
+    for (const enemy of this.enemies) {
+      enemy.update(dt)
+      enemy.fireCooldown -= dt
+
+      if (enemy.pos.y > this.height + 36) {
+        enemy.alive = false
+      }
+    }
+  }
+
+  cleanupObjects(): void {
+    this.bullets = this.bullets.filter((b) => b.alive)
+    this.enemies = this.enemies.filter((e) => e.alive)
+  }
+
+  isColliding = isColliding
+
+  renderBullets(): void {
+    for (const bullet of this.bullets) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = bullet.color
+      this.ctx.arc(bullet.pos.x, bullet.pos.y, bullet.radius, 0, Math.PI * 2)
+      this.ctx.fill()
+    }
+  }
+
+  renderEnemies(): void {
+    for (const enemy of this.enemies) {
+      this.ctx.beginPath()
+      this.ctx.fillStyle = enemy.hp > 1 ? '#f25f5c' : '#ff9f1c'
+      this.ctx.arc(enemy.pos.x, enemy.pos.y, enemy.radius, 0, Math.PI * 2)
+      this.ctx.fill()
+
+      this.ctx.fillStyle = '#0a0f1d'
+      this.ctx.fillRect(enemy.pos.x - 8, enemy.pos.y - 3, 16, 6)
+    }
+  }
+
+  createStars(count: number): void {
     this.stars = []
-    for (let i = 0; i < 140; i += 1) {
+    for (let i = 0; i < count; i += 1) {
       this.stars.push(
         new Star(
           Math.random() * this.width,
@@ -75,6 +194,23 @@ export class ShooterGame {
           Math.random() * 70 + 30,
         ),
       )
+    }
+  }
+
+  updateStars(dt: number): void {
+    for (const star of this.stars) {
+      star.y += star.speed * dt
+      if (star.y > this.height + 2) {
+        star.y = -4
+        star.x = Math.random() * this.width
+      }
+    }
+  }
+
+  renderStars(): void {
+    for (const star of this.stars) {
+      this.ctx.fillStyle = 'rgba(233, 245, 255, 0.85)'
+      this.ctx.fillRect(star.x, star.y, star.size, star.size)
     }
   }
 
@@ -98,16 +234,24 @@ export class ShooterGame {
   }
 
   private restart(): void {
-    this.player = new Player({ x: this.width / 2, y: this.height - 80 }, { x: 0, y: 0 }, 14)
+    this.player.pos.x = this.width / 2
+    this.player.pos.y = this.height - 80
+    this.player.vel.x = 0
+    this.player.vel.y = 0
+    this.player.hp = 3
+    this.player.shootCooldown = 0
+
     this.bullets = []
     this.enemies = []
     this.score = 0
     this.gameOver = false
-    this.enemySpawnTimer = 0
-    this.difficultyTimer = 0
-    this.spawnInterval = 1.1
-    this.hudMessage.textContent = getLessonMessage(this.step)
+
+    for (const handler of this.restartHandlers) {
+      handler(this)
+    }
+
     this.syncPlayerVisual()
+    this.updateHud()
   }
 
   private loop(timestamp: number): void {
@@ -121,172 +265,18 @@ export class ShooterGame {
   }
 
   private update(dt: number): void {
-    const features = getLessonFeatures(this.step)
-
-    this.updateStars(dt)
     this.syncPlayerVisual()
 
     if (this.gameOver) {
       return
     }
 
-    this.handlePlayerMovement(dt)
-
-    if (features.playerFire) {
-      this.handlePlayerFire(dt)
-    }
-
-    if (features.spawnEnemies) {
-      this.spawnEnemies(dt)
-      this.updateEnemies(dt, features.enemyFire)
-    }
-
-    this.updateBullets(dt)
-
-    if (features.collision) {
-      this.handleCollisions()
+    for (const handler of this.updateHandlers) {
+      handler(this, dt)
     }
 
     this.cleanupObjects()
     this.updateHud()
-  }
-
-  private updateStars(dt: number): void {
-    for (const star of this.stars) {
-      star.y += star.speed * dt
-      if (star.y > this.height + 2) {
-        star.y = -4
-        star.x = Math.random() * this.width
-      }
-    }
-  }
-
-  private handlePlayerMovement(dt: number): void {
-    let moveX = 0
-    let moveY = 0
-
-    if (this.keys.has('ArrowLeft') || this.keys.has('KeyA')) moveX -= 1
-    if (this.keys.has('ArrowRight') || this.keys.has('KeyD')) moveX += 1
-    if (this.keys.has('ArrowUp') || this.keys.has('KeyW')) moveY -= 1
-    if (this.keys.has('ArrowDown') || this.keys.has('KeyS')) moveY += 1
-
-    const length = Math.hypot(moveX, moveY) || 1
-    this.player.vel.x = (moveX / length) * this.player.speed
-    this.player.vel.y = (moveY / length) * this.player.speed
-    this.player.update(dt)
-
-    this.player.pos.x = Math.max(20, Math.min(this.width - 20, this.player.pos.x))
-    this.player.pos.y = Math.max(20, Math.min(this.height - 20, this.player.pos.y))
-  }
-
-  private handlePlayerFire(dt: number): void {
-    this.player.shootCooldown -= dt
-
-    if ((this.keys.has('Space') || this.keys.has('KeyJ')) && this.player.shootCooldown <= 0) {
-      this.player.shootCooldown = 0.14
-      this.bullets.push(
-        new Bullet(
-          { x: this.player.pos.x, y: this.player.pos.y - 18 },
-          { x: 0, y: -620 },
-          4,
-          '#ffe082',
-          true,
-        ),
-      )
-    }
-  }
-
-  private spawnEnemies(dt: number): void {
-    this.enemySpawnTimer -= dt
-    this.difficultyTimer += dt
-
-    if (this.difficultyTimer > 8 && this.spawnInterval > 0.42) {
-      this.spawnInterval -= 0.08
-      this.difficultyTimer = 0
-    }
-
-    if (this.enemySpawnTimer <= 0) {
-      this.enemySpawnTimer = this.spawnInterval
-
-      const x = Math.random() * (this.width - 60) + 30
-      const speed = Math.random() * 80 + 120
-      const hp = Math.random() < 0.12 ? 3 : 1
-      const radius = hp === 3 ? 18 : 13
-
-      this.enemies.push(new Enemy({ x, y: -24 }, { x: 0, y: speed }, radius, hp))
-    }
-  }
-
-  private updateEnemies(dt: number, enemyFireEnabled: boolean): void {
-    for (const enemy of this.enemies) {
-      enemy.update(dt)
-      enemy.fireCooldown -= dt
-
-      if (enemyFireEnabled && enemy.fireCooldown <= 0 && enemy.pos.y < this.height * 0.75) {
-        enemy.fireCooldown = Math.random() * 1.8 + 0.8
-        this.bullets.push(
-          new Bullet({ x: enemy.pos.x, y: enemy.pos.y + 12 }, { x: 0, y: 280 }, 5, '#ff6f91', false),
-        )
-      }
-
-      if (enemy.pos.y > this.height + 36) {
-        enemy.alive = false
-      }
-    }
-  }
-
-  private updateBullets(dt: number): void {
-    for (const bullet of this.bullets) {
-      bullet.update(dt)
-      if (bullet.pos.y < -30 || bullet.pos.y > this.height + 30) {
-        bullet.alive = false
-      }
-    }
-  }
-
-  private handleCollisions(): void {
-    for (const bullet of this.bullets) {
-      if (!bullet.alive) continue
-
-      if (bullet.fromPlayer) {
-        for (const enemy of this.enemies) {
-          if (!enemy.alive) continue
-          if (isColliding(bullet, enemy)) {
-            bullet.alive = false
-            enemy.hp -= 1
-            if (enemy.hp <= 0) {
-              enemy.alive = false
-              this.score += 100
-            }
-            break
-          }
-        }
-      } else if (isColliding(bullet, this.player)) {
-        bullet.alive = false
-        this.damagePlayer()
-      }
-    }
-
-    for (const enemy of this.enemies) {
-      if (enemy.alive && isColliding(enemy, this.player)) {
-        enemy.alive = false
-        this.damagePlayer()
-      }
-    }
-  }
-
-  private damagePlayer(): void {
-    this.player.hp -= 1
-    if (this.player.hp <= 0) {
-      this.player.hp = 0
-      this.gameOver = true
-      this.hudMessage.textContent = 'GAME OVER - Press Enter to Restart'
-    }
-  }
-
-  private cleanupObjects(): void {
-    this.bullets = this.bullets.filter((b) => b.alive)
-    this.enemies = this.enemies.filter((e) => e.alive)
   }
 
   private updateHud(): void {
@@ -319,41 +309,13 @@ export class ShooterGame {
   }
 
   private render(): void {
-    const features = getLessonFeatures(this.step)
     const ctx = this.ctx
     ctx.clearRect(0, 0, this.width, this.height)
 
-    if (features.spaceBackground) {
-      const gradient = ctx.createLinearGradient(0, 0, 0, this.height)
-      gradient.addColorStop(0, '#061427')
-      gradient.addColorStop(1, '#0d2b45')
-      ctx.fillStyle = gradient
-      ctx.fillRect(0, 0, this.width, this.height)
+    this.backgroundRenderer(this, ctx)
 
-      for (const star of this.stars) {
-        ctx.fillStyle = 'rgba(233, 245, 255, 0.85)'
-        ctx.fillRect(star.x, star.y, star.size, star.size)
-      }
-    } else {
-      ctx.fillStyle = '#ffffff'
-      ctx.fillRect(0, 0, this.width, this.height)
-    }
-
-    for (const bullet of this.bullets) {
-      ctx.beginPath()
-      ctx.fillStyle = bullet.color
-      ctx.arc(bullet.pos.x, bullet.pos.y, bullet.radius, 0, Math.PI * 2)
-      ctx.fill()
-    }
-
-    for (const enemy of this.enemies) {
-      ctx.beginPath()
-      ctx.fillStyle = enemy.hp > 1 ? '#f25f5c' : '#ff9f1c'
-      ctx.arc(enemy.pos.x, enemy.pos.y, enemy.radius, 0, Math.PI * 2)
-      ctx.fill()
-
-      ctx.fillStyle = '#0a0f1d'
-      ctx.fillRect(enemy.pos.x - 8, enemy.pos.y - 3, 16, 6)
+    for (const handler of this.renderHandlers) {
+      handler(this, ctx)
     }
 
     if (this.gameOver) {
