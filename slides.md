@@ -121,7 +121,7 @@ transition: fade-out
 class: text-sm
 ---
 # 2. Git のインストール
-Gitは、ソースコードの歴史を
+Gitは、簡単に言うとソースコードの変更履歴を記録するためのシステムです。今回は、インターネット上に公開されているコードをダウンロードするために用います。
 すでにインストール済みの人は飛ばしてOKです
 
 ## Windows
@@ -131,6 +131,56 @@ Gitは、ソースコードの歴史を
 
 ## MacOS
 1. VSCodeの時と同じ手順で`ターミナル`を起動し、`brew install git` と入力し、しばらく待ちます。
+
+---
+transition: fade-out
+class: text-sm
+---
+
+# 3. mise のインストール
+miseは、開発ツールのバージョン管理をするソフトウェアです。TypeScript(JavaScript)やPythonなど、様々な言語の開発ツールに対応しています。
+今回は、TypeScriptを実行するためのツールであるNode.jsのインストールに用います。
+<v-switch transition=true>
+  <template #0>
+
+## インストール手順
+
+### Windows
+1. VSCodeの時と同じ手順で`PowerShell`を起動し、`winget install jdx.mise` と入力し、しばらく待ちます。
+
+<br>
+
+### MacOS
+1. VSCodeの時と同じ手順で`ターミナル`を起動し、`brew install mise` と入力し、しばらく待ちます。
+
+  </template>
+  
+  <template #1>
+
+## 有効化手順
+
+### Windows
+1. VSCodeの時と同じ手順で`PowerShell`を起動し、以下のコマンドを実行します
+```
+$shimPath = "$env:USERPROFILE\AppData\Local\mise\shims"
+$currentPath = [Environment]::GetEnvironmentVariable('Path', 'User')
+$newPath = $currentPath + ";" + $shimPath
+[Environment]::SetEnvironmentVariable('Path', $newPath, 'User')
+```
+
+<br>
+
+### MacOS
+1. VSCodeの時と同じ手順で`ターミナル`を起動し、以下のコマンドを実行します。
+```
+echo 'eval "$(mise activate zsh --shims)"' >> ~/.zprofile
+echo 'eval "$(mise activate zsh)"' >> ~/.zshrc
+```
+
+
+  </template>
+</v-switch>
+
 
 ---
 layout: image-right
