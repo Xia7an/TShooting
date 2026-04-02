@@ -70,37 +70,67 @@ transition: fade-out
 - **プログラミングの楽しさを知る！**
   - プログラミングで作品が出来上がる喜びを体験しよう！
 - TypeScriptの雰囲気を理解する！
-  - 世界シェア No. 1<sup class="text-xs text-gray-400">1</sup> のプログラミング言語を触ってみよう！
+  - 世界シェア No. 1 のプログラミング言語を触ってみよう！
 - ゲームがどのようにして作られているのかを理解する！
   - `printf("Hello World");` のその先へ！
 
 <br>
-<br>
 
 # おことわり
-- 本日の講習会では、時間の都合上、制作するコードの一部は事前に用意したものを使用します。
+- 資料ではスペースの都合上、すべてのコードの説明を網羅していませんが、疑問に思ったことがあればTAにいつでも質問してください！
+- 進行の都合上、プログラミング経験者の方には退屈な時間があるかもしれません。その場合は、資料を見ながらどんどん次のステップを進めて大丈夫です！
 
-<div class="absolute bottom-10 left-14 text-sm text-gray-400">
+<!-- <div class="absolute bottom-10 left-14 text-sm text-gray-400">
   1: 2025年8月時点のGitHub上のコード量に基づく (出典: https://github.blog/news-insights/octoverse/octoverse-a-new-developer-joins-github-every-second-as-ai-leads-typescript-to-1/)
-</div>
+</div> -->
 ---
-layout: two-cols
-layoutClass: gap-16
+transition: fade-out
 ---
+# 環境構築
+- 今回の講習会では、 **TypeScript** <img src="https://icon.icepanel.io/Technology/svg/TypeScript.svg" class="inline-block h-6 w-6 align-middle" /> という言語を用います 
+  - TypeScriptは、JavaScriptという、Webブラウザでの動作を目的に開発された言語を改良して作られた言語です。
+- TypeScriptをお手元のPCで動かせるようにするために、次の3つのツールをインストールします。
+1. VSCode <img src="https://icon.icepanel.io/Technology/svg/Visual-Studio-Code-%28VS-Code%29.svg" class="inline-block h-6 w-6 align-middle" /> 
+2. Git <img src="https://icon.icepanel.io/Technology/svg/Git.svg" class="inline-block h-6 w-6 align-middle" /> 
+3. mise <img src="https://github.com/jdx/mise/raw/main/docs/public/logo-light.svg" class="inline-block h-6 w-6 align-middle" />
 
-# Table of contents
+---
+transition: fade-out
+class: text-sm
+---
+# 1. VSCode のインストール
+VSCodeは、Microsoftが開発しているエディタです。プログラミングをするにあたって便利な機能があらかじめ組み込まれた便利なソフトウェアです。
+すでにインストール済みの人は飛ばしてOKです
 
-You can use the `Toc` component to generate a table of contents for your slides:
+## Windows
+1. <kbd><img src="https://icon.icepanel.io/Technology/svg/Windows-11.svg" class="inline-block h-2 w-2 align-middle"></kbd> キーを押して、`PowerShell` と検索します
+2. `Windows PowerShell` を起動します。
+3. 起動した画面に `winget install Microsoft.VisualStudioCode` と入力し、しばらく待ちます。
 
-```html
-<Toc minDepth="1" maxDepth="1" />
-```
+<br>
 
-The title will be inferred from your slide content, or you can override it with `title` and `level` in your frontmatter.
+## MacOS
+1. <kbd>command</kbd> キーを押して、`ターミナル` と検索します
+2. `ターミナル` を起動します。
+3. 起動した画面に `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"` と入力し、しばらく待ちます。
+4. 画面に表示される文字が止まり、再び `$`マークで終わる行が出てきたら、今度は`brew install visual-studio-code` と入力し、しばらく待ちます。
 
-::right::
 
-<Toc text-sm minDepth="1" maxDepth="2" />
+---
+transition: fade-out
+class: text-sm
+---
+# 2. Git のインストール
+Gitは、ソースコードの歴史を
+すでにインストール済みの人は飛ばしてOKです
+
+## Windows
+1. VSCodeの時と同じ手順で`PowerShell`を起動し、`winget install Git.Git` と入力し、しばらく待ちます。
+
+<br>
+
+## MacOS
+1. VSCodeの時と同じ手順で`ターミナル`を起動し、`brew install git` と入力し、しばらく待ちます。
 
 ---
 layout: image-right
