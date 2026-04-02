@@ -2,12 +2,20 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>tshooting</title>
   </head>
   <body>
-    <div id="app"></div>
+    <div id="app">
+      <div class="hud">
+        <h1>Sky Lance</h1>
+        <div class="stats">
+          <span id="score">SCORE: 0</span>
+          <span id="hp">HP: 3</span>
+        </div>
+      </div>
+      <canvas id="game" width="420" height="720"></canvas>
+    </div>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>

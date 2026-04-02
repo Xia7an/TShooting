@@ -1,7 +1,7 @@
 # TShooting（Sky Lance）
 
 ブラウザで遊べる縦スクロール2Dシューティングゲームです。  
-講習会向けに、参加者がファイルを順番に作って機能を追加していく構成にしています。
+講習会向けに、参加者が通常のアプリ開発と同じく「モジュール（クラス）を作成して import する」流れで機能を追加できる構成にしています。
 
 ## 起動方法
 
@@ -10,41 +10,39 @@ npm install
 npm run dev
 ```
 
-## 講習会での進め方
+## 講習会のファイル分割（4種類）
 
-### STEP 1
+### 1. 自機に関する処理
 
-- 触るファイル: `src/workshop/step1PlayerMove.ts`
-- 状態: 白背景に自機が表示され、移動できる
+- `src/game/playerFeature.ts`
+- 自機移動・自機弾の発射/更新/描画をまとめています
 
-### STEP 2
+### 2. 敵キャラに関する処理（敵弾を含む）
 
-- 新規作成: `src/workshop/step2PlayerShot.ts`
-- 変更: `src/workshop/gameCourse.ts` に import と `installStep2PlayerShot(game)` を追加
-- 目標: 自機が弾を発射できる
+- `src/game/enemyFeature.ts`
+- 敵出現・敵更新・当たり判定・敵弾の発射/被弾処理をまとめています
 
-### STEP 3
+### 3. 背景に関する処理
 
-- 新規作成: `src/workshop/step3EnemySpawnAndCollision.ts`
-- 変更: `src/workshop/gameCourse.ts` に import と呼び出しを追加
-- 目標: 敵がランダム出現し、敵弾なしで当たり判定を実装
+- `src/game/backgroundFeature.ts`
+- 宇宙背景（星の生成/更新/描画）をまとめています
 
-### STEP 4
+### 4. 参加者が触らない基盤（イベント/描画/HTML寄り）
 
-- 新規作成: `src/workshop/step4EnemyShot.ts`
-- 変更: `src/workshop/gameCourse.ts` に import と呼び出しを追加
-- 目標: 敵が弾を撃つ
+- `src/game/ShooterGame.ts`
+- `src/app/createGameLayout.ts`
 
-### STEP 5
+`ShooterGame.ts` はゲームループ、入力イベント処理、HUD更新、Canvas描画の土台に限定しています。
 
-- 新規作成: `src/workshop/step5SpaceBackground.ts`
-- 変更: `src/workshop/gameCourse.ts` に import と呼び出しを追加
-- 目標: 背景を宇宙風にする
+## 講習会での進行
 
-## 構成方針
+- 機能追加は `src/main.ts` に import とインスタンス生成を追加して進めます
+- STEPごとの目安は以下の通りです
 
-- `src/workshop/gameCourse.ts` が「講習会の進行管理ファイル」です
-- `src/game/ShooterGame.ts` は拡張ポイントを提供する土台です
-- `src/app/createGameLayout.ts` はWeb固有処理を隠蔽し、`innerHTML` は使いません
+1. `new PlayerMovementFeature()`
+2. `new PlayerShootingFeature()`
+3. `new EnemySpawnCollisionFeature()`
+4. `new EnemyShootingFeature()`
+5. `new SpaceBackgroundFeature()`
 
-参加者は `src/workshop` のファイル中心に実装し、ゲーム全体の主導権を持ったまま段階的に完成させられます。
+例: 新しい機能を作るときは `src/game/xxxFeature.ts` を作成し、`src/main.ts` で import して `new XxxFeature()` を `ShooterGame` に渡します。
