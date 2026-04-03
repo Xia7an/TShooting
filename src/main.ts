@@ -46,7 +46,7 @@ let enemySpawnTimer = 0
 const enemySpawnInterval = 1.1
 
 // --- 入力管理 ---
-const keys = new Set<string>()
+const keys = new Set<string>() // どのキーが押されているかを管理する Set
 
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') e.preventDefault()
@@ -250,4 +250,5 @@ function loop(timestamp: number) {
   requestAnimationFrame(loop)
 }
 
+// すべての処理の起点: ゲームループの開始
 requestAnimationFrame(loop)
