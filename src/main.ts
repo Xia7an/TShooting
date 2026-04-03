@@ -1,15 +1,5 @@
 import './style.css'
 
-// --- Canvas 初期化 ---
-const canvas = document.getElementById('game') as HTMLCanvasElement
-const ctx = canvas.getContext('2d')!
-const W = canvas.width
-const H = canvas.height
-
-// --- HUD 要素 ---
-const scoreEl = document.getElementById('score')!
-const hpEl = document.getElementById('hp')!
-
 // --- 型定義 ---
 type Bullet = {
   x: number; y: number
@@ -28,6 +18,16 @@ type Enemy = {
   fireCooldown: number
   alive: boolean
 }
+
+// --- Canvas 初期化 ---
+const canvas = document.getElementById('game') as HTMLCanvasElement
+const ctx = canvas.getContext('2d')!
+const W = canvas.width
+const H = canvas.height
+
+// --- HUD 要素 ---
+const scoreEl = document.getElementById('score')!
+const hpEl = document.getElementById('hp')!
 
 // --- ゲーム状態 ---
 let playerX = W / 2
@@ -81,10 +81,10 @@ function update(dt: number) {
 
   // プレイヤー移動
   let mx = 0, my = 0
-  if (keys.has('KeyA') || keys.has('ArrowLeft'))  mx -= 1
+  if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1
   if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1
-  if (keys.has('KeyW') || keys.has('ArrowUp'))    my -= 1
-  if (keys.has('KeyS') || keys.has('ArrowDown'))  my += 1
+  if (keys.has('KeyW') || keys.has('ArrowUp')) my -= 1
+  if (keys.has('KeyS') || keys.has('ArrowDown')) my += 1
   const len = Math.hypot(mx, my) || 1
   playerX += (mx / len) * playerSpeed * dt
   playerY += (my / len) * playerSpeed * dt
