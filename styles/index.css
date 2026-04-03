@@ -2,3 +2,9 @@
 /* .slidev-layout {
   font-size: 14px; /* デフォルトより大きくしたい・小さくしたいなど、好みのサイズを指定 */
 /* } */
+
+.fade-out-enter-active,
+.fade-out-leave-active {
+  transition-duration: 0.1s !important;
+  /* !important をつけてSlidevのデフォルト設定を上書きします */
+}
