@@ -27,3 +27,30 @@ export function restart() {
   score = 0
   gameOver = false
 }
+
+function update(_dt: number) {
+  if (gameOver) return
+}
+
+function render() {
+  const grad = ctx.createLinearGradient(0, 0, 0, H)
+  grad.addColorStop(0, '#061427')
+  grad.addColorStop(1, '#0d2b45')
+  ctx.fillStyle = grad
+  ctx.fillRect(0, 0, W, H)
+
+  scoreEl.textContent = `SCORE: ${score}`
+  hpEl.textContent = `HP: ${playerHp}`
+}
+
+let lastTime = 0
+
+function loop(timestamp: number) {
+  const dt = Math.min((timestamp - lastTime) / 1000 || 0, 0.033)
+  lastTime = timestamp
+  update(dt)
+  render()
+  requestAnimationFrame(loop)
+}
+
+requestAnimationFrame(loop)
