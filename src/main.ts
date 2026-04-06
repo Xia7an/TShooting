@@ -1,15 +1,15 @@
 import './style.css'
 
 
-// --- Canvas 初期化 ---
-const canvas = document.getElementById('game') as HTMLCanvasElement
-const ctx = canvas.getContext('2d')!
-const W = canvas.width
-const H = canvas.height
+// --- ゲーム状態の初期化 ---
+export let playerX = W / 2
+export let playerY = H - 80
+export const playerSpeed = 360
+export const playerRadius = 14
+export let playerHp = 3
 
-// --- HUD 要素 ---
-const scoreEl = document.getElementById('score')!
-const hpEl = document.getElementById('hp')!
+export let score = 0
+export let gameOver = false
 
 // --- ゲーム状態 ---
 let playerHp = 3
@@ -32,9 +32,7 @@ function update(dt: number) {
   hpEl.textContent = `HP: ${playerHp}`
 }
 
-// --- 描画処理 ---
 function render() {
-  // 背景
   const grad = ctx.createLinearGradient(0, 0, 0, H)
   grad.addColorStop(0, '#061427')
   grad.addColorStop(1, '#0d2b45')
@@ -42,7 +40,6 @@ function render() {
   ctx.fillRect(0, 0, W, H)
 }
 
-// --- ゲームループ ---
 let lastTime = 0
 
 function loop(timestamp: number) {
@@ -53,5 +50,4 @@ function loop(timestamp: number) {
   requestAnimationFrame(loop)
 }
 
-// すべての処理の起点: ゲームループの開始
 requestAnimationFrame(loop)
