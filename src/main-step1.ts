@@ -1,3 +1,4 @@
+// 自機の移動
 import './style.css'
 
 
