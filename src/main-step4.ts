@@ -1,4 +1,4 @@
-// 自機の弾発射
+// 敵攻撃
 
 import './style.css'
 
@@ -8,15 +8,6 @@ type Enemy = {
   radius: number
   hp: number
   fireCooldown: number
-  alive: boolean
-}
-
-type Bullet = {
-  x: number; y: number
-  vx: number; vy: number
-  radius: number
-  color: string
-  fromPlayer: boolean
   alive: boolean
 }
 
