@@ -59,6 +59,7 @@ window.addEventListener('keyup', (e) => keys.delete(e.code))
 function isHit(ax: number, ay: number, ar: number, bx: number, by: number, br: number): boolean {
   const dx = ax - bx
   const dy = ay - by
+  // 距離の差の二乗が半径の和の二乗以下なら衝突した扱い
   return dx * dx + dy * dy <= (ar + br) ** 2
 }
 

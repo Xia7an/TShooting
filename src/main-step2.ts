@@ -32,6 +32,7 @@ let enemies: Enemy[] = []
 let enemySpawnTimer = 0
 const enemySpawnInterval = 1.1
 
+
 // --- 入力管理 ---
 const keys = new Set<string>() // どのキーが押されているかを管理する Set
 

@@ -1,4 +1,4 @@
-// 敵攻撃
+// 自機の弾発射
 
 import './style.css'
 
@@ -8,6 +8,15 @@ type Enemy = {
   radius: number
   hp: number
   fireCooldown: number
+  alive: boolean
+}
+
+type Bullet = {
+  x: number; y: number
+  vx: number; vy: number
+  radius: number
+  color: string
+  fromPlayer: boolean
   alive: boolean
 }
 
@@ -25,12 +34,16 @@ const hpEl = document.getElementById('hp')!
 let playerX = W / 2
 let playerY = H - 80
 const playerSpeed = 360
+const playerRadius = 14
 let playerHp = 3
 let score = 0
 
 let enemies: Enemy[] = []
+let bullets: Bullet[] = []
+let shootCooldown = 0
 let enemySpawnTimer = 0
 const enemySpawnInterval = 1.1
+const shotInterval = 0.14
 
 // --- 入力管理 ---
 const keys = new Set<string>() // どのキーが押されているかを管理する Set
@@ -40,6 +53,14 @@ window.addEventListener('keydown', (e) => {
   keys.add(e.code)
 })
 window.addEventListener('keyup', (e) => keys.delete(e.code))
+
+// --- 衝突判定 ---
+function isHit(ax: number, ay: number, ar: number, bx: number, by: number, br: number): boolean {
+  const dx = ax - bx
+  const dy = ay - by
+  // 距離の差の二乗が半径の和の二乗以下なら衝突した扱い
+  return dx * dx + dy * dy <= (ar + br) ** 2
+}
 
 
 // --- 更新処理 ---
@@ -76,15 +97,59 @@ function update(dt: number) {
     })
   }
 
-  // 敵の移動 & 敵弾発射
+  // 敵の移動
   for (const e of enemies) {
     e.x += e.vx * dt
     e.y += e.vy * dt
     e.fireCooldown -= dt
     if (e.y > H + 36) { e.alive = false; continue }
   }
-  // 死んだオブジェクトを除去
+
+  // 弾 → 敵 衝突
+  for (const b of bullets) {
+    if (!b.alive || !b.fromPlayer) continue
+    for (const e of enemies) {
+      if (!e.alive) continue // 死んだ敵の当たり判定は考慮しない
+      if (isHit(b.x, b.y, b.radius, e.x, e.y, e.radius)) { // 弾と敵が衝突したら
+        b.alive = false
+        e.hp -= 1
+        if (e.hp <= 0) { e.alive = false; score += 100 } // 敵を倒したらスコア加点
+        break
+      }
+    }
+  }
+
+  // 敵 → 自機 衝突
+  for (const e of enemies) {
+    if (!e.alive) continue
+    if (isHit(e.x, e.y, e.radius, playerX, playerY, playerRadius)) {
+      e.alive = false
+      playerHp -= 1
+    }
+  }
+  
+  // プレイヤー弾発射
+  shootCooldown -= dt
+  if (keys.has('Space') && shootCooldown <= 0) {
+    shootCooldown = shotInterval
+    bullets.push({
+      x: playerX, y: playerY - 18,
+      vx: 0, vy: -620,
+      radius: 4, color: '#ffe082',
+      fromPlayer: true, alive: true,
+    })
+  }
+
+  // 弾移動
+  for (const b of bullets) { // 弾一覧の弾を一つずつ動かす
+    b.x += b.vx * dt
+    b.y += b.vy * dt
+    if (b.y < -30 || b.y > H + 30) b.alive = false 
+  }
+
+  // 死んだ弾/敵をリストから消去
   enemies = enemies.filter((e) => e.alive)
+  bullets = bullets.filter((e) => e.alive)  
 }
 
 // --- 描画処理 ---
@@ -110,6 +175,14 @@ function render() {
     ctx.fillStyle = e.hp > 1 ? '#f25f5c' : '#ff9f1c'
     ctx.beginPath()
     ctx.arc(e.x, e.y, e.radius, 0, Math.PI * 2)
+    ctx.fill()
+  }
+
+  // 弾
+  for (const b of bullets) {
+    ctx.fillStyle = b.color
+    ctx.beginPath()
+    ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2)
     ctx.fill()
   }
 }
