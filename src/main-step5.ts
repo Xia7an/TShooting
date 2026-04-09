@@ -45,12 +45,14 @@ let enemySpawnTimer = 0
 const enemySpawnInterval = 0.2
 const shotInterval = 0.14
 
+let gameOver = false // ゲームオーバーかどうかを管理するフラグ
 
 // --- 入力管理 ---
 const keys = new Set<string>() // どのキーが押されているかを管理する Set
 
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Space') e.preventDefault()
+  if (gameOver && e.code === 'Enter') { restart(); return }
   keys.add(e.code)
 })
 window.addEventListener('keyup', (e) => keys.delete(e.code))
@@ -63,9 +65,22 @@ function isHit(ax: number, ay: number, ar: number, bx: number, by: number, br: n
   return dx * dx + dy * dy <= (ar + br) ** 2
 }
 
+// --- リスタート ---
+function restart() {
+  playerX = W / 2
+  playerY = H - 80
+  playerHp = 3
+  shootCooldown = 0
+  bullets = []
+  enemies = []
+  score = 0
+  gameOver = false
+  enemySpawnTimer = 0
+}
 
 // --- 更新処理 ---
 function update(dt: number) {
+  if (gameOver) return
 
   // HUD 更新
   scoreEl.textContent = `SCORE: ${score}`
@@ -127,6 +142,7 @@ function update(dt: number) {
     if (isHit(e.x, e.y, e.radius, playerX, playerY, playerRadius)) {
       e.alive = false
       playerHp -= 1
+      if (playerHp <= 0) { playerHp = 0; gameOver = true }
     }
   }
   
@@ -186,6 +202,22 @@ function render() {
     ctx.beginPath()
     ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2)
     ctx.fill()
+  }
+
+  if (gameOver) {
+    ctx.fillStyle = 'rgba(4, 8, 18, 0.52)'
+    ctx.fillRect(0, 0, W, H)
+
+    ctx.fillStyle = '#f8f4e3'
+    ctx.font = '700 42px "Trebuchet MS", sans-serif'
+    ctx.textAlign = 'center'
+    ctx.fillText('GAME OVER', W / 2, H / 2 - 20)
+
+    ctx.font = '600 22px "Trebuchet MS", sans-serif'
+    ctx.fillText(`SCORE: ${score}`, W / 2, H / 2 + 22)
+
+    ctx.font = '400 16px "Trebuchet MS", sans-serif'
+    ctx.fillText('Press Enter to Restart', W / 2, H / 2 + 56)
   }
 }
 
