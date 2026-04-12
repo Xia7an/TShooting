@@ -7,7 +7,6 @@ type Enemy = {
   vx: number; vy: number
   radius: number
   hp: number
-  fireCooldown: number
   alive: boolean
 }
 
@@ -16,7 +15,6 @@ type Bullet = {
   vx: number; vy: number
   radius: number
   color: string
-  fromPlayer: boolean
   alive: boolean
 }
 
@@ -83,7 +81,7 @@ function update(dt: number) {
       x: ex, y: -24,
       vx: 0, vy: speed,
       radius: ehp === 3 ? 18 : 13,
-      hp: ehp, fireCooldown: Math.random() * 1.6 + 0.5,
+      hp: ehp, 
       alive: true,
     })
   }
@@ -92,12 +90,10 @@ function update(dt: number) {
   for (const e of enemies) {
     e.x += e.vx * dt
     e.y += e.vy * dt
-    e.fireCooldown -= dt
     if (e.y > H + 36) { e.alive = false; continue }
   }
-  // 死んだオブジェクトを除去
+  // 死んだ敵を除去
   enemies = enemies.filter((e) => e.alive)
-  bullets = bullets.filter((e) => e.alive)
 
   
   // プレイヤー弾発射
@@ -108,7 +104,7 @@ function update(dt: number) {
       x: playerX, y: playerY - 18,
       vx: 0, vy: -620,
       radius: 4, color: '#ffe082',
-      fromPlayer: true, alive: true,
+      alive: true,
     })
   }
 
@@ -118,9 +114,8 @@ function update(dt: number) {
     b.y += b.vy * dt
     if (b.y < -30 || b.y > H + 30) b.alive = false 
   }
-
-  // 死んだ弾/敵をリストから消去
-  enemies = enemies.filter((e) => e.alive)
+  
+  // 死んだ弾を除去
   bullets = bullets.filter((e) => e.alive)
 }
 

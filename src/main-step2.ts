@@ -7,7 +7,6 @@ type Enemy = {
   vx: number; vy: number
   radius: number
   hp: number
-  fireCooldown: number
   alive: boolean
 }
 
@@ -49,7 +48,7 @@ function update(dt: number) {
   scoreEl.textContent = `SCORE: ${score}`
   hpEl.textContent = `HP: ${playerHp}`
 
-    // プレイヤー移動
+  // プレイヤー移動
   let mx = 0, my = 0
   if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1
   if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1
@@ -72,16 +71,15 @@ function update(dt: number) {
       x: ex, y: -24,
       vx: 0, vy: speed,
       radius: ehp === 3 ? 18 : 13,
-      hp: ehp, fireCooldown: Math.random() * 1.6 + 0.5,
+      hp: ehp,
       alive: true,
     })
   }
 
-  // 敵の移動 & 敵弾発射
+  // 敵の移動
   for (const e of enemies) {
     e.x += e.vx * dt
     e.y += e.vy * dt
-    e.fireCooldown -= dt
     if (e.y > H + 36) { e.alive = false; continue }
   }
   // 死んだオブジェクトを除去

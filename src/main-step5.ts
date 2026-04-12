@@ -80,13 +80,13 @@ function restart() {
 
 // --- 更新処理 ---
 function update(dt: number) {
-  if (gameOver) return
-
   // HUD 更新
   scoreEl.textContent = `SCORE: ${score}`
   hpEl.textContent = `HP: ${playerHp}`
 
-    // プレイヤー移動
+  if (gameOver) return
+  
+  // プレイヤー移動
   let mx = 0, my = 0
   if (keys.has('KeyA') || keys.has('ArrowLeft')) mx -= 1
   if (keys.has('KeyD') || keys.has('ArrowRight')) mx += 1
@@ -204,6 +204,7 @@ function render() {
     ctx.fill()
   }
 
+  // ゲームオーバー画面
   if (gameOver) {
     ctx.fillStyle = 'rgba(4, 8, 18, 0.52)'
     ctx.fillRect(0, 0, W, H)

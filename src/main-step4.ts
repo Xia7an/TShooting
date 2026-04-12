@@ -7,7 +7,6 @@ type Enemy = {
   vx: number; vy: number
   radius: number
   hp: number
-  fireCooldown: number
   alive: boolean
 }
 
@@ -16,7 +15,6 @@ type Bullet = {
   vx: number; vy: number
   radius: number
   color: string
-  fromPlayer: boolean
   alive: boolean
 }
 
@@ -60,7 +58,7 @@ function isHit(ax: number, ay: number, ar: number, bx: number, by: number, br: n
   const dx = ax - bx
   const dy = ay - by
   // 距離の差の二乗が半径の和の二乗以下なら衝突した扱い
-  return dx * dx + dy * dy <= (ar + br) ** 2
+  return Math.sqrt(dx * dx + dy * dy) <= (ar + br)
 }
 
 
@@ -94,7 +92,7 @@ function update(dt: number) {
       x: ex, y: -24,
       vx: 0, vy: speed,
       radius: ehp === 3 ? 18 : 13,
-      hp: ehp, fireCooldown: Math.random() * 1.6 + 0.5,
+      hp: ehp, 
       alive: true,
     })
   }
@@ -103,13 +101,35 @@ function update(dt: number) {
   for (const e of enemies) {
     e.x += e.vx * dt
     e.y += e.vy * dt
-    e.fireCooldown -= dt
     if (e.y > H + 36) { e.alive = false; continue }
   }
+  // 死んだ敵を除去
+  enemies = enemies.filter((e) => e.alive)
 
+  // プレイヤー弾発射
+  shootCooldown -= dt
+  if (keys.has('Space') && shootCooldown <= 0) {
+    shootCooldown = shotInterval
+    bullets.push({
+      x: playerX, y: playerY - 18,
+      vx: 0, vy: -620,
+      radius: 4, color: '#ffe082',
+      alive: true,
+    })
+  }
+
+  // 弾移動
+  for (const b of bullets) { // 弾一覧の弾を一つずつ動かす
+    b.x += b.vx * dt
+    b.y += b.vy * dt
+    if (b.y < -30 || b.y > H + 30) b.alive = false 
+  }
+  // 死んだ弾を除去
+  bullets = bullets.filter((e) => e.alive)
+  
   // 弾 → 敵 衝突
   for (const b of bullets) {
-    if (!b.alive || !b.fromPlayer) continue
+    if (!b.alive) continue // 死んだ弾の当たり判定は考慮しない
     for (const e of enemies) {
       if (!e.alive) continue // 死んだ敵の当たり判定は考慮しない
       if (isHit(b.x, b.y, b.radius, e.x, e.y, e.radius)) { // 弾と敵が衝突したら
@@ -129,29 +149,6 @@ function update(dt: number) {
       playerHp -= 1
     }
   }
-  
-  // プレイヤー弾発射
-  shootCooldown -= dt
-  if (keys.has('Space') && shootCooldown <= 0) {
-    shootCooldown = shotInterval
-    bullets.push({
-      x: playerX, y: playerY - 18,
-      vx: 0, vy: -620,
-      radius: 4, color: '#ffe082',
-      fromPlayer: true, alive: true,
-    })
-  }
-
-  // 弾移動
-  for (const b of bullets) { // 弾一覧の弾を一つずつ動かす
-    b.x += b.vx * dt
-    b.y += b.vy * dt
-    if (b.y < -30 || b.y > H + 30) b.alive = false 
-  }
-
-  // 死んだ弾/敵をリストから消去
-  enemies = enemies.filter((e) => e.alive)
-  bullets = bullets.filter((e) => e.alive)  
 }
 
 // --- 描画処理 ---
